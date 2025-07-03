@@ -1,0 +1,28 @@
+<form id="upload-form" enctype="multipart/form-data">
+  <input type="file" id="file" name="file" required>
+  <button type="submit">שלח תמונה</button>
+</form>
+
+<p id="status"></p>
+
+<script>
+document.getElementById('upload-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const formData = new FormData();
+  const fileInput = document.getElementById('file');
+  formData.append('file', fileInput.files[0]);
+
+  fetch('http://127.0.0.1:5000/upload', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById('status').innerText = data.message || 'בוצע';
+  })
+  .catch(err => {
+    document.getElementById('status').innerText = '⚠ שגיאה בשליחה';
+    console.error(err);
+  });
+});
+</script>
