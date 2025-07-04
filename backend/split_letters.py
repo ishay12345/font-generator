@@ -1,16 +1,13 @@
-# backend/split_letters.py
-
 import cv2
 import os
 import numpy as np
 
 def split_letters(image_path, output_folder):
     os.makedirs(output_folder, exist_ok=True)
-    
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
     _, thresh = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     dilated = cv2.dilate(thresh, kernel, iterations=1)
     clean = cv2.morphologyEx(dilated, cv2.MORPH_CLOSE, kernel, iterations=1)
 
@@ -42,7 +39,7 @@ def split_letters(image_path, output_folder):
                     nx = min(new_box[0], x2)
                     ny = min(new_box[1], y2)
                     nw = max(new_box[0]+new_box[2], x2+w2) - nx
-                    nh = max(new_box[1]+new_box[3], y2+h2) - ny
+                    nh = max(new_box[1]+new_box[3], x2+h2) - ny
                     new_box = [nx, ny, nw, nh]
                     used[j] = True
             merged.append(new_box)
@@ -96,3 +93,4 @@ def split_letters(image_path, output_folder):
         cv2.imwrite(os.path.join(output_folder, f"{i:02d}_{name}.png"), crop)
 
     print(f"✅ נחתכו {min(27, len(ordered))} אותיות ונשמרו בתיקייה:\n{output_folder}")
+
