@@ -70,10 +70,10 @@ def split_letters(image_path):
         x1, y1 = max(x - padding, 0), max(y - padding, 0)
         x2, y2 = min(x + w + padding, img.shape[1]), min(y + h + padding, img.shape[0])
         crop = img[y1:y2, x1:x2]
-        filename = f"{i:02d}.png"
+        filename = f"{i:02d}_000.png"
         cv2.imwrite(os.path.join(OUTPUT_FOLDER, filename), crop)
 
     print(f"✅ נחתכו {min(27, len(ordered))} אותיות ונשמרו בתיקייה:\n{OUTPUT_FOLDER}")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
