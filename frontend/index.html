@@ -1,28 +1,65 @@
-<form id="upload-form" enctype="multipart/form-data">
-  <input type="file" id="file" name="file" required>
-  <button type="submit">שלח תמונה</button>
-</form>
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>העלאת תמונה</title>
+  <style>
+    body {
+      font-family: Arial;
+      background-color: #f5f5f5;
+      text-align: center;
+      padding-top: 50px;
+    }
+    #upload-form {
+      margin-bottom: 20px;
+    }
+    #status {
+      color: #333;
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>שליחת תמונה</h1>
+  <form id="upload-form" enctype="multipart/form-data">
+    <input type="file" id="file" name="file" required>
+    <button type="submit">שלח תמונה</button>
+  </form>
+  <p id="status"></p>
 
-<p id="status"></p>
+  <script>
+    document.getElementById('upload-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('file');
+      const status = document.getElementById('status');
 
-<script>
-document.getElementById('upload-form').addEventListener('submit', function (e) {
-  e.preventDefault();
-  const formData = new FormData();
-  const fileInput = document.getElementById('file');
-  formData.append('file', fileInput.files[0]);
+      if (!fileInput.files.length) {
+        status.innerText = '⚠ לא נבחר קובץ';
+        return;
+      }
 
-  fetch('http://127.0.0.1:5000/upload', {
-    method: 'POST',
-    body: formData
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('status').innerText = data.message || 'בוצע';
-  })
-  .catch(err => {
-    document.getElementById('status').innerText = '⚠ שגיאה בשליחה';
-    console.error(err);
-  });
-});
-</script>
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      fetch('/upload', {  // ⬅ זה כל השינוי: לא כתובת מלאה, רק נתיב יחסי
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        status.innerText = data.message || 'בוצע בהצלחה!';
+        status.classList.remove('error');
+      })
+      .catch(err => {
+        status.innerText = '⚠ שגיאה בשליחה';
+        status.classList.add('error');
+        console.error(err);
+      });
+    });
+  </script>
+</body>
+</html>
