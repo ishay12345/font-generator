@@ -21,6 +21,10 @@
     .error {
       color: red;
     }
+    #download-btn {
+      display: none;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -31,11 +35,16 @@
   </form>
   <p id="status"></p>
 
+  <a id="download-btn" href="/download-font" download>
+    <button>⬇ הורד את הפונט</button>
+  </a>
+
   <script>
     document.getElementById('upload-form').addEventListener('submit', function (e) {
       e.preventDefault();
       const fileInput = document.getElementById('file');
       const status = document.getElementById('status');
+      const downloadBtn = document.getElementById('download-btn');
 
       if (!fileInput.files.length) {
         status.innerText = '⚠ לא נבחר קובץ';
@@ -45,18 +54,21 @@
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
 
-      fetch('/upload', {  // ⬅ זה כל השינוי: לא כתובת מלאה, רק נתיב יחסי
+      fetch('/upload', {
         method: 'POST',
         body: formData
       })
       .then(res => res.json())
       .then(data => {
-        status.innerText = data.message || 'בוצע בהצלחה!';
-        status.classList.remove('error');
+        if (data.message) {
+          status.innerText = data.message;
+          downloadBtn.style.display = 'inline-block';
+        } else {
+          status.innerText = '⚠ קרתה שגיאה';
+        }
       })
       .catch(err => {
         status.innerText = '⚠ שגיאה בשליחה';
-        status.classList.add('error');
         console.error(err);
       });
     });
