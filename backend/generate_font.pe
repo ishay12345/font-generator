@@ -1,0 +1,70 @@
+# קוד רץ בתוך FontForge
+Print("🚀 Running FontForge...")
+
+# טען JSON עם שמות האותיות
+input_path = $1
+output_path = $2
+json_path = $3
+
+Print("📁 SVG folder: " + input_path)
+Print("📄 Output path: " + output_path)
+Print("📄 JSON map path: " + json_path)
+
+# יצירת פונט חדש
+font = New()
+font.encoding = "UnicodeFull"
+font.fontname = "HebrewFont"
+font.familyname = "Hebrew Font"
+font.fullname = "Hebrew Font"
+font.em = 1000
+font.ascent = 800
+font.descent = 200
+
+# קריאת מיפוי האותיות מתוך JSON
+Read(json_path)
+
+# כמות הגליפים שנוצרו
+glyph_count = 0
+
+# מעבר על קבצי SVG בתיקייה
+svg_files = ListDirectory(input_path)
+foreach (filename, svg_files)
+    if (StrRight(filename, 4) != ".svg")
+        continue
+    endif
+
+    parts = StrSplit(filename, "_")
+    if (SizeOf(parts) != 2)
+        continue
+    endif
+
+    name = StrLeft(StrRight(filename, StrLen(filename)-SizeOf(parts[0])-1), StrLen(filename)-SizeOf(parts[0])-5)
+
+    code = GetGlobal(name)
+    if (code == 0)
+        continue
+    endif
+
+    glyph = font.createChar(code, name)
+    glyph.importOutlines(input_path + "/" + filename)
+
+    if (glyph.boundingBox() == [0,0,0,0])
+        continue
+    endif
+
+    box = glyph.boundingBox()
+    glyph.width = (box[2] - box[0]) + 80
+    glyph.left_side_bearing = 27
+    glyph.right_side_bearing = 27
+
+    glyph_count += 1
+endloop
+
+if (glyph_count > 0)
+    font.generate(output_path)
+    Print("✅ Font created at: " + output_path)
+else
+    Print("❌ No glyphs were added.")
+endif
+
+Quit()
