@@ -56,8 +56,11 @@ def upload_file():
         return jsonify({'message': '✅ הפונט נוצר בהצלחה! אפשר להוריד אותו עכשיו'})
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"שגיאה בתהליך: {e}")
         return jsonify({'error': '⚠ שגיאה במהלך יצירת הפונט'}), 500
+
 
 @app.route('/download-font')
 def download_font():
