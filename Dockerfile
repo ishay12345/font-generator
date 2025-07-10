@@ -1,18 +1,21 @@
+# בסיס: פייתון 3.10 (גרסה רזה)
 FROM python:3.10-slim
 
-# התקנת FontForge ו־libGL עבור OpenCV
+# התקנת FontForge, potrace, ותלויות מערכת חיוניות ל־OpenCV ו־Pillow
 RUN apt-get update && \
-    apt-get install -y fontforge python3-dev build-essential libgl1 && \
+    apt-get install -y fontforge potrace libgl1 python3-dev build-essential && \
     apt-get clean
 
-# התקנת ספריות פייתון
+# התקנת ספריות פייתון מהקובץ
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# העתקת הקוד
+# העתקת כל קבצי הפרויקט
 COPY . /app
 WORKDIR /app
 
+# פתיחת פורט ש-Flask מאזין עליו
 EXPOSE 10000
 
+# פקודת ההרצה של השרת
 CMD ["python", "backend/server.py"]
