@@ -1,9 +1,15 @@
 # בסיס: פייתון 3.10 (גרסה רזה)
 FROM python:3.10-slim
 
-# התקנת FontForge, potrace, ותלויות מערכת חיוניות ל־OpenCV ו־Pillow
+# התקנת FontForge + Python bindings + potrace + libGL לתמיכה ב־OpenCV
 RUN apt-get update && \
-    apt-get install -y fontforge potrace libgl1 python3-dev build-essential && \
+    apt-get install -y \
+        fontforge \
+        python3-fontforge \
+        potrace \
+        libgl1 \
+        python3-dev \
+        build-essential && \
     apt-get clean
 
 # התקנת ספריות פייתון מהקובץ
