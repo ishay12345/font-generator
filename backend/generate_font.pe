@@ -6,11 +6,16 @@ output_path = $2
 Print("📁 SVG folder: " + input_path)
 Print("📄 Output path: " + output_path)
 
-New()
-SetFontNames("HebrewFont", "Hebrew Font", "Hebrew Font")
-SetFontDimensions(1000, 800, 200)
+font = New()
+font.encoding = "UnicodeFull"
+font.fontname = "HebrewFont"
+font.familyname = "Hebrew Font"
+font.fullname = "Hebrew Font"
+font.em = 1000
+font.ascent = 800
+font.descent = 200
 
-# הגדרת המיפוי של האותיות (שם קובץ → יוניקוד)
+# מיפוי שם קובץ ליוניקוד
 SetGlobal("alef", 0x05D0)
 SetGlobal("bet", 0x05D1)
 SetGlobal("gimel", 0x05D2)
@@ -58,7 +63,7 @@ foreach(filename, svg_files)
         continue
     endif
 
-    glyph = CreateChar(code, name)
+    glyph = font.createChar(code, name)
     glyph.importOutlines(input_path + "/" + filename)
 
     box = glyph.boundingBox()
@@ -74,7 +79,7 @@ foreach(filename, svg_files)
 endloop
 
 if (glyph_count > 0)
-    Generate(output_path)
+    font.generate(output_path)
     Print("✅ Font created at: " + output_path)
 else
     Print("❌ No glyphs were added.")
