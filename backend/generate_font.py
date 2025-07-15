@@ -1,4 +1,5 @@
-import fontforge
+import subprocess
+import json
 import os
 
 def generate_ttf(svg_folder, output_path):
@@ -13,49 +14,17 @@ def generate_ttf(svg_folder, output_path):
         "final_pe": 0x05E3, "final_tsadi": 0x05E5
     }
 
-    font = fontforge.font()
-    font.encoding = "UnicodeFull"
-    font.fontname = "HebrewFont"
-    font.familyname = "Hebrew Font"
-    font.fullname = "Hebrew Font"
-    font.em = 1000
-    font.ascent = 800
-    font.descent = 200
+    # כתיבת קובץ JSON עם המיפוי
+    json_path = os.path.join("backend", "letter_map.json")
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(letter_map, f)
 
-    glyph_count = 0
-    for filename in os.listdir(svg_folder):
-        if not filename.endswith(".svg"):
-            continue
-
-        parts = filename.split("_", 1)
-        if len(parts) != 2:
-            continue
-
-        name = parts[1].replace(".svg", "")
-        if name not in letter_map:
-            continue
-
-        code = letter_map[name]
-        svg_path = os.path.join(svg_folder, filename)
-        glyph = font.createChar(code, name)
-
-        try:
-            glyph.importOutlines(svg_path)
-            if glyph.boundingBox() == (0, 0, 0, 0):
-                continue
-
-            xmin, ymin, xmax, ymax = glyph.boundingBox()
-            glyph.width = int(xmax - xmin) + 80
-            glyph.left_side_bearing = 27
-            glyph.right_side_bearing = 27
-
-            glyph_count += 1
-        except Exception as e:
-            print(f"שגיאה בייבוא גליף {name}: {e}")
-            continue
-
-    if glyph_count > 0:
-        font.generate(output_path)
-        print(f"✅ הפונט נוצר: {output_path}")
-    else:
-        print("❌ לא נוצרו גליפים")
+    # הרצת FontForge עם הקובץ .pe
+    subprocess.run([
+        "fontforge",
+        "-script",
+        "backend/generate_font.pe",
+        svg_folder,
+        output_path,
+        json_path
+    ], check=True)
