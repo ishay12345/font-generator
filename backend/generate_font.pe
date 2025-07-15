@@ -1,22 +1,14 @@
-# קוד רץ בתוך FontForge
 Print("🚀 Running FontForge...")
 
-# בדוק אם יש מספיק פרמטרים
-if (ArgCount() < 3)
-    Print("❌ Error: Not enough arguments. Expected: input_path, output_path, json_path")
-    Quit()
-endif
-
-# קלטים מהפקודה
-input_path = Arg(1)
-output_path = Arg(2)
-json_path = Arg(3)
+# שליפת הפרמטרים מהפקודה
+input_path = $1
+output_path = $2
+json_path = $3
 
 Print("📁 SVG folder: " + input_path)
 Print("📄 Output path: " + output_path)
 Print("📄 JSON map path: " + json_path)
 
-# יצירת הפונט
 font = New()
 font.encoding = "UnicodeFull"
 font.fontname = "HebrewFont"
@@ -26,11 +18,9 @@ font.em = 1000
 font.ascent = 800
 font.descent = 200
 
-# קריאת מיפוי האותיות
 Read(json_path)
 glyph_count = 0
 
-# מעבר על קבצי SVG
 svg_files = ListDirectory(input_path)
 foreach (filename, svg_files)
     if (StrRight(filename, 4) != ".svg")
@@ -43,7 +33,6 @@ foreach (filename, svg_files)
     endif
 
     name = StrLeft(StrRight(filename, StrLen(filename) - SizeOf(parts[0]) - 1), StrLen(filename) - SizeOf(parts[0]) - 5)
-
     code = GetGlobal(name)
     if (code == 0)
         continue
