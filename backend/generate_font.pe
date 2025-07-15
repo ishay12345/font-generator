@@ -1,28 +1,48 @@
 Print("🚀 Running FontForge...")
 
-# שליפת הפרמטרים מהפקודה
 input_path = $1
 output_path = $2
-json_path = $3
 
 Print("📁 SVG folder: " + input_path)
 Print("📄 Output path: " + output_path)
-Print("📄 JSON map path: " + json_path)
 
 New()
-font.encoding = "UnicodeFull"
-font.fontname = "HebrewFont"
-font.familyname = "Hebrew Font"
-font.fullname = "Hebrew Font"
-font.em = 1000
-font.ascent = 800
-font.descent = 200
+SetFontNames("HebrewFont", "Hebrew Font", "Hebrew Font")
+SetFontDimensions(1000, 800, 200)
 
-Read(json_path)
+# הגדרת המיפוי של האותיות (שם קובץ → יוניקוד)
+SetGlobal("alef", 0x05D0)
+SetGlobal("bet", 0x05D1)
+SetGlobal("gimel", 0x05D2)
+SetGlobal("dalet", 0x05D3)
+SetGlobal("he", 0x05D4)
+SetGlobal("vav", 0x05D5)
+SetGlobal("zayin", 0x05D6)
+SetGlobal("het", 0x05D7)
+SetGlobal("tet", 0x05D8)
+SetGlobal("yod", 0x05D9)
+SetGlobal("kaf", 0x05DB)
+SetGlobal("lamed", 0x05DC)
+SetGlobal("mem", 0x05DE)
+SetGlobal("nun", 0x05E0)
+SetGlobal("samekh", 0x05E1)
+SetGlobal("ayin", 0x05E2)
+SetGlobal("pe", 0x05E4)
+SetGlobal("tsadi", 0x05E6)
+SetGlobal("qof", 0x05E7)
+SetGlobal("resh", 0x05E8)
+SetGlobal("shin", 0x05E9)
+SetGlobal("tav", 0x05EA)
+SetGlobal("final_kaf", 0x05DA)
+SetGlobal("final_mem", 0x05DD)
+SetGlobal("final_nun", 0x05DF)
+SetGlobal("final_pe", 0x05E3)
+SetGlobal("final_tsadi", 0x05E5)
+
 glyph_count = 0
-
 svg_files = ListDirectory(input_path)
-foreach (filename, svg_files)
+
+foreach(filename, svg_files)
     if (StrRight(filename, 4) != ".svg")
         continue
     endif
@@ -32,13 +52,13 @@ foreach (filename, svg_files)
         continue
     endif
 
-    name = StrLeft(StrRight(filename, StrLen(filename) - SizeOf(parts[0]) - 1), StrLen(filename) - SizeOf(parts[0]) - 5)
+    name = StrLeft(StrRight(filename, StrLen(filename)-SizeOf(parts[0])-1), StrLen(filename)-SizeOf(parts[0])-5)
     code = GetGlobal(name)
     if (code == 0)
         continue
     endif
 
-    glyph = font.createChar(code, name)
+    glyph = CreateChar(code, name)
     glyph.importOutlines(input_path + "/" + filename)
 
     box = glyph.boundingBox()
@@ -54,7 +74,7 @@ foreach (filename, svg_files)
 endloop
 
 if (glyph_count > 0)
-    font.generate(output_path)
+    Generate(output_path)
     Print("✅ Font created at: " + output_path)
 else
     Print("❌ No glyphs were added.")
