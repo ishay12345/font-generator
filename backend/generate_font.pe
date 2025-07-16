@@ -11,7 +11,7 @@ Print("📄 Output path: " + output_path)
 Print("📄 JSON map path: " + json_path)
 
 # יצירת פונט חדש
-font = New()
+New()
 font.encoding = "UnicodeFull"
 font.fontname = "HebrewFont"
 font.familyname = "Hebrew Font"
