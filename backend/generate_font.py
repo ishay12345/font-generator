@@ -1,8 +1,9 @@
 import subprocess
-import json
-import os
 
 def generate_ttf(svg_folder, output_path):
+    import json
+
+    # טען את מפת האותיות
     letter_map = {
         "alef": 0x05D0, "bet": 0x05D1, "gimel": 0x05D2, "dalet": 0x05D3,
         "he": 0x05D4, "vav": 0x05D5, "zayin": 0x05D6, "het": 0x05D7,
@@ -14,17 +15,18 @@ def generate_ttf(svg_folder, output_path):
         "final_pe": 0x05E3, "final_tsadi": 0x05E5
     }
 
-    # כתיבת קובץ JSON עם המיפוי
-    json_path = os.path.join("backend", "letter_map.json")
+    json_path = "backend/letter_map.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(letter_map, f)
 
-    # הרצת FontForge עם הקובץ .pe
-    subprocess.run([
-        "fontforge",
-        "-script",
-        "backend/generate_font.pe",
-        svg_folder,
-        output_path,
-        json_path
-    ], check=True)
+    try:
+        result = subprocess.run([
+            "fontforge", "-script", "backend/generate_font.pe",
+            svg_folder, output_path, json_path
+        ], check=True, capture_output=True, text=True)
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print("⚠ שגיאה בהרצת FontForge:")
+        print("STDOUT:\n", e.stdout)
+        print("STDERR:\n", e.stderr)
+        raise
