@@ -1,7 +1,7 @@
 # קוד רץ בתוך FontForge
 Print("🚀 Running FontForge...")
 
-# נתיבי קלט מהטרמינל
+# קלט מהשורת פקודה
 input_path = $1
 output_path = $2
 json_path = $3
@@ -12,29 +12,21 @@ Print("📄 JSON map path: " + json_path)
 
 # יצירת פונט חדש
 New()
-font.encoding = "UnicodeFull"
-font.fontname = "HebrewFont"
-font.familyname = "Hebrew Font"
-font.fullname = "Hebrew Font"
-font.em = 1000
-font.ascent = 800
-font.descent = 200
+SetFontNames("HebrewFont", "Hebrew Font", "Hebrew Font")
+SetFontEncoding("UnicodeFull")
+SetFontAscent(800)
+SetFontDescent(200)
+ScaleToEm(1000, 0)
 
-# טעינת מיפוי קוד יוניקוד לשמות מתוך JSON
-Print("📦 Loading letter map from JSON...")
-Call("LoadJSON", json_path)  # פונקציה מותאמת ב־Python שמכניסה משתנים ל־FontForge דרך הסביבה
-
-# כמות הגליפים
+# טען את הקוד יוניקוד מכל משתנה גלובלי (שנטען ע"י JSON מפייתון)
 glyph_count = 0
-
-# מעבר על קבצי SVG
 svg_files = ListDirectory(input_path)
+
 foreach(filename, svg_files)
     if (StrRight(filename, 4) != ".svg")
         continue
     endif
 
-    # חילוץ שם האות מתוך השם
     parts = StrSplit(filename, "_")
     if (SizeOf(parts) != 2)
         continue
@@ -44,28 +36,27 @@ foreach(filename, svg_files)
 
     code = GetGlobal(name)
     if (code == 0)
-        Print("⚠ לא נמצא קוד יוניקוד עבור " + name)
+        Print("⚠ לא נמצא קוד עבור " + name)
         continue
     endif
 
-    glyph = font.createChar(code, name)
-    glyph.importOutlines(input_path + "/" + filename)
+    Select(code)
+    Import(input_path + "/" + filename)
 
-    box = glyph.boundingBox()
+    box = GetBoundingBox()
     if (box[0] == 0 && box[1] == 0 && box[2] == 0 && box[3] == 0)
         continue
     endif
 
-    glyph.width = (box[2] - box[0]) + 80
-    glyph.left_side_bearing = 27
-    glyph.right_side_bearing = 27
+    SetWidth((box[2] - box[0]) + 80)
+    SetLBearing(27)
+    SetRBearing(27)
 
     glyph_count += 1
 endloop
 
-# יצירת הפונט אם יש גליפים
 if (glyph_count > 0)
-    font.generate(output_path)
+    Generate(output_path)
     Print("✅ Font created at: " + output_path)
 else
     Print("❌ No glyphs were added.")
