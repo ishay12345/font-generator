@@ -19,14 +19,19 @@ def generate_ttf(svg_folder, output_path):
         json.dump(letter_map, f)
 
     try:
-        result = subprocess.run([
-            "fontforge",
-            "-script",
-            "backend/generate_font.pe",
-            svg_folder,
-            output_path,
-            map_path
-        ], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            [
+                "fontforge",
+                "-script",
+                "backend/generate_font.pe",
+                svg_folder,
+                output_path,
+                map_path
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+        )
 
         print("✅ FontForge STDOUT:\n", result.stdout)
         print("📛 FontForge STDERR:\n", result.stderr)
