@@ -1,7 +1,7 @@
 # קוד רץ בתוך FontForge
 Print("🚀 Running FontForge...")
 
-# טען JSON עם שמות האותיות
+# נתיבי קלט מהטרמינל
 input_path = $1
 output_path = $2
 json_path = $3
@@ -11,36 +11,44 @@ Print("📄 Output path: " + output_path)
 Print("📄 JSON map path: " + json_path)
 
 # יצירת פונט חדש
-New()
-SetFontNames("HebrewFont", "Hebrew Font", "Hebrew Font")
-SetFontDimensions(1000, 800, 200)
+font = New()
+font.encoding = "UnicodeFull"
+font.fontname = "HebrewFont"
+font.familyname = "Hebrew Font"
+font.fullname = "Hebrew Font"
+font.em = 1000
+font.ascent = 800
+font.descent = 200
 
-# קריאת מיפוי האותיות מתוך JSON
-Read(json_path)
+# טעינת מיפוי קוד יוניקוד לשמות מתוך JSON
+Print("📦 Loading letter map from JSON...")
+Call("LoadJSON", json_path)  # פונקציה מותאמת ב־Python שמכניסה משתנים ל־FontForge דרך הסביבה
 
-# כמות הגליפים שנוצרו
+# כמות הגליפים
 glyph_count = 0
 
-# מעבר על קבצי SVG בתיקייה
+# מעבר על קבצי SVG
 svg_files = ListDirectory(input_path)
-foreach (filename, svg_files)
+foreach(filename, svg_files)
     if (StrRight(filename, 4) != ".svg")
         continue
     endif
 
+    # חילוץ שם האות מתוך השם
     parts = StrSplit(filename, "_")
     if (SizeOf(parts) != 2)
         continue
     endif
 
-    name = StrLeft(StrRight(filename, StrLen(filename)-SizeOf(parts[0])-1), StrLen(filename)-SizeOf(parts[0])-5)
+    name = StrLeft(StrRight(filename, StrLen(filename) - SizeOf(parts[0]) - 1), StrLen(filename) - SizeOf(parts[0]) - 5)
 
     code = GetGlobal(name)
     if (code == 0)
+        Print("⚠ לא נמצא קוד יוניקוד עבור " + name)
         continue
     endif
 
-    glyph = CreateChar(code, name)
+    glyph = font.createChar(code, name)
     glyph.importOutlines(input_path + "/" + filename)
 
     box = glyph.boundingBox()
@@ -55,8 +63,9 @@ foreach (filename, svg_files)
     glyph_count += 1
 endloop
 
+# יצירת הפונט אם יש גליפים
 if (glyph_count > 0)
-    Generate(output_path)
+    font.generate(output_path)
     Print("✅ Font created at: " + output_path)
 else
     Print("❌ No glyphs were added.")
