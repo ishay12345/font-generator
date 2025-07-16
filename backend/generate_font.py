@@ -1,5 +1,6 @@
 import subprocess
 import json
+import os
 
 def generate_ttf(svg_folder, output_path):
     letter_map = {
@@ -13,18 +14,17 @@ def generate_ttf(svg_folder, output_path):
         "final_pe": 0x05E3, "final_tsadi": 0x05E5
     }
 
-    json_path = "backend/letter_map.json"
-    with open(json_path, "w", encoding="utf-8") as f:
+    # שמירת המיפוי לקובץ זמני
+    map_path = os.path.join("backend", "letter_map.json")
+    with open(map_path, "w", encoding="utf-8") as f:
         json.dump(letter_map, f)
 
-    process = subprocess.run([
-        "fontforge", "-script", "backend/generate_font.pe",
-        svg_folder, output_path, json_path
-    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-
-    # 🧾 זה החלק שחייב להיות:
-    print("📤 FontForge output:")
-    print(process.stdout)
-
-    if process.returncode != 0:
-        raise RuntimeError("FontForge failed with return code " + str(process.returncode))
+    # הרצת FontForge עם הסקריפט .pe
+    subprocess.run([
+        "fontforge",
+        "-script",
+        "backend/generate_font.pe",
+        svg_folder,
+        output_path,
+        map_path
+    ])
