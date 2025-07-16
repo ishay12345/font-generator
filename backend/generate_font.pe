@@ -1,5 +1,6 @@
 Print("🚀 Running FontForge...")
 
+# קבלת פרמטרים מהשורה
 input_path = $1
 output_path = $2
 json_path = $3
@@ -8,55 +9,39 @@ Print("📁 SVG folder: " + input_path)
 Print("📄 Output path: " + output_path)
 Print("📄 JSON map path: " + json_path)
 
+# יצירת פונט חדש
 font = New()
-font.encoding = "UnicodeFull"
-font.fontname = "HebrewFont"
-font.familyname = "Hebrew Font"
-font.fullname = "Hebrew Font"
+SetFontNames(font, "HebrewFont", "Hebrew Font", "Hebrew Font")
 font.em = 1000
 font.ascent = 800
 font.descent = 200
 
-# קריאת קובץ JSON עם המיפוי
-json = ReadFile(json_path)
-json = Strsub(json, "{", "")
-json = Strsub(json, "}", "")
-json = Strsub(json, "\"", "")
-json = Strsub(json, " ", "")
-pairs = StrSplit(json, ",")
+# קריאת המיפוי מתוך JSON
+Read(json_path)
 
-i = 0
-while (i < SizeOf(pairs))
-    kv = StrSplit(pairs[i], ":")
-    if (SizeOf(kv) == 2)
-        name = kv[0]
-        code = Strtol(kv[1])
-        SetGlobal(name, code)
-    endif
-    i += 1
-endloop
-
+# ספירת גליפים שנוצרו
 glyph_count = 0
-files = ListDirectory(input_path)
 
-foreach (f, files)
-    if (StrRight(f, 4) != ".svg")
+# טעינת כל קבצי ה־SVG
+svg_files = ListDirectory(input_path)
+foreach (filename, svg_files)
+    if (StrRight(filename, 4) != ".svg")
         continue
     endif
 
-    parts = StrSplit(f, "_")
+    parts = StrSplit(filename, "_")
     if (SizeOf(parts) != 2)
         continue
     endif
 
-    name = Strsub(parts[1], ".svg", "")
+    name = StrLeft(StrRight(filename, StrLen(filename) - SizeOf(parts[0]) - 1), StrLen(filename) - SizeOf(parts[0]) - 5)
     code = GetGlobal(name)
     if (code == 0)
         continue
     endif
 
     glyph = font.createChar(code, name)
-    glyph.importOutlines(input_path + "/" + f)
+    glyph.importOutlines(input_path + "/" + filename)
 
     box = glyph.boundingBox()
     if (box[0] == box[2] && box[1] == box[3])
@@ -79,3 +64,10 @@ endif
 
 Quit()
 
+
+# פונקציה להגדרת שמות הפונט
+Define(SetFontNames, font, fontname, familyname, fullname)
+    font.fontname = fontname
+    font.familyname = familyname
+    font.fullname = fullname
+EndDefine
