@@ -1,14 +1,12 @@
 # קוד רץ בתוך FontForge
 Print("🚀 Running FontForge...")
 
-# קלט מהשורת פקודה
+# קלט מהפקודה
 input_path = $1
 output_path = $2
-json_path = $3
 
 Print("📁 SVG folder: " + input_path)
 Print("📄 Output path: " + output_path)
-Print("📄 JSON map path: " + json_path)
 
 # יצירת פונט חדש
 New()
@@ -17,14 +15,40 @@ ScaleToEm(1000)
 SetOS2Value("WinAscent", 800)
 SetOS2Value("WinDescent", 200)
 
-# טען מיפוי שם-קוד גלובלי (בפורמט SFD או JSON שנטען כ־Exec)
-Exec(json_path)
+# מיפוי שם קובץ → Unicode
+# (ללא סיומת וללא מספר מקדים)
+Define("alef", 0x05D0)
+Define("bet", 0x05D1)
+Define("gimel", 0x05D2)
+Define("dalet", 0x05D3)
+Define("he", 0x05D4)
+Define("vav", 0x05D5)
+Define("zayin", 0x05D6)
+Define("het", 0x05D7)
+Define("tet", 0x05D8)
+Define("yod", 0x05D9)
+Define("kaf", 0x05DB)
+Define("lamed", 0x05DC)
+Define("mem", 0x05DE)
+Define("nun", 0x05E0)
+Define("samekh", 0x05E1)
+Define("ayin", 0x05E2)
+Define("pe", 0x05E4)
+Define("tsadi", 0x05E6)
+Define("qof", 0x05E7)
+Define("resh", 0x05E8)
+Define("shin", 0x05E9)
+Define("tav", 0x05EA)
+Define("final_kaf", 0x05DA)
+Define("final_mem", 0x05DD)
+Define("final_nun", 0x05DF)
+Define("final_pe", 0x05E3)
+Define("final_tsadi", 0x05E5)
 
-# כמות הגליפים שנוצרו
+# מעבר על קבצי SVG
+svg_files = ListDirectory(input_path)
 glyph_count = 0
 
-# מעבר על קבצי SVG בתיקייה
-svg_files = ListDirectory(input_path)
 foreach(filename, svg_files)
     if (StrRight(filename, 4) != ".svg")
         continue
@@ -39,7 +63,7 @@ foreach(filename, svg_files)
 
     code = GetGlobal(name)
     if (code == 0)
-        Print("⚠ לא נמצא קוד עבור " + name)
+        Print("⚠ לא נמצא קוד עבור: " + name)
         continue
     endif
 
