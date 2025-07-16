@@ -1,31 +1,63 @@
-# קוד רץ בתוך FontForge
 Print("🚀 Running FontForge...")
 
-# קלט מהשורת פקודה
-input_path = $1
+# משתנים שנשלחו מהפקודה: svg_folder, output_path, json_path
+svg_folder = $1
 output_path = $2
 json_path = $3
 
-Print("📁 SVG folder: " + input_path)
+Print("📁 SVG folder: " + svg_folder)
 Print("📄 Output path: " + output_path)
 Print("📄 JSON map path: " + json_path)
 
-# יצירת פונט חדש
-New()
-SetFontNames("HebrewFont", "Hebrew Font", "Hebrew Font")
-ScaleToEm(1000)
-SetOS2Value("WinAscent", 800)
-SetOS2Value("WinDescent", 200)
+# מיפוי יוניקוד
+# זה כמו לטעון את JSON ידנית — נכתוב את הערכים כאן ישירות
+# תוכל לעדכן את זה אם אתה רוצה לקרוא מ־JSON בקוד הפייתון ולהמיר
 
-# טען מיפוי שם-קוד גלובלי (בפורמט SFD או JSON שנטען כ־Exec)
-Exec(json_path)
+# פונט חדש
+font = New()
+font.encoding = "UnicodeFull"
+font.fontname = "HebrewFont"
+font.familyname = "Hebrew Font"
+font.fullname = "Hebrew Font"
+font.em = 1000
+font.ascent = 800
+font.descent = 200
 
-# כמות הגליפים שנוצרו
+# רשימת קבצים בתיקייה
+files = ListDirectory(svg_folder)
 glyph_count = 0
 
-# מעבר על קבצי SVG בתיקייה
-svg_files = ListDirectory(input_path)
-foreach(filename, svg_files)
+# טבלת יוניקוד ידנית
+Define("alef", 0x05D0)
+Define("bet", 0x05D1)
+Define("gimel", 0x05D2)
+Define("dalet", 0x05D3)
+Define("he", 0x05D4)
+Define("vav", 0x05D5)
+Define("zayin", 0x05D6)
+Define("het", 0x05D7)
+Define("tet", 0x05D8)
+Define("yod", 0x05D9)
+Define("kaf", 0x05DB)
+Define("lamed", 0x05DC)
+Define("mem", 0x05DE)
+Define("nun", 0x05E0)
+Define("samekh", 0x05E1)
+Define("ayin", 0x05E2)
+Define("pe", 0x05E4)
+Define("tsadi", 0x05E6)
+Define("qof", 0x05E7)
+Define("resh", 0x05E8)
+Define("shin", 0x05E9)
+Define("tav", 0x05EA)
+Define("final_kaf", 0x05DA)
+Define("final_mem", 0x05DD)
+Define("final_nun", 0x05DF)
+Define("final_pe", 0x05E3)
+Define("final_tsadi", 0x05E5)
+
+# עבור כל קובץ SVG
+foreach (filename, files)
     if (StrRight(filename, 4) != ".svg")
         continue
     endif
@@ -35,35 +67,33 @@ foreach(filename, svg_files)
         continue
     endif
 
-    name = StrLeft(StrRight(filename, StrLen(filename) - SizeOf(parts[0]) - 1), StrLen(filename) - SizeOf(parts[0]) - 5)
-
+    name = StrReplace(parts[1], ".svg", "")
     code = GetGlobal(name)
     if (code == 0)
-        Print("⚠ לא נמצא קוד עבור " + name)
         continue
     endif
 
-    Select(code)
-    Import(input_path + "/" + filename)
+    path = svg_folder + "/" + filename
+    glyph = font.createChar(code, name)
+    glyph.importOutlines(path)
 
-    box = GetBoundingBox()
+    box = glyph.boundingBox()
     if (box[0] == 0 && box[1] == 0 && box[2] == 0 && box[3] == 0)
         continue
     endif
 
-    SetWidth((box[2] - box[0]) + 80)
-    SetLBearing(27)
-    SetRBearing(27)
+    glyph.width = (box[2] - box[0]) + 80
+    glyph.left_side_bearing = 27
+    glyph.right_side_bearing = 27
 
     glyph_count += 1
 endloop
 
 if (glyph_count > 0)
-    Generate(output_path)
-    Print("✅ Font created at: " + output_path)
+    font.generate(output_path)
+    Print("✅ Font created successfully.")
 else
-    Print("❌ No glyphs were added.")
+    Print("❌ No glyphs added.")
 endif
 
 Quit()
-
