@@ -13,15 +13,18 @@ Print("📄 JSON map path: " + json_path)
 # יצירת פונט חדש
 New()
 SetFontNames("HebrewFont", "Hebrew Font", "Hebrew Font")
-SetFontEncoding("UnicodeFull")
-SetFontAscent(800)
-SetFontDescent(200)
-ScaleToEm(1000, 0)
+ScaleToEm(1000)
+SetOS2Value("WinAscent", 800)
+SetOS2Value("WinDescent", 200)
 
-# טען את הקוד יוניקוד מכל משתנה גלובלי (שנטען ע"י JSON מפייתון)
+# טען מיפוי שם-קוד גלובלי (בפורמט SFD או JSON שנטען כ־Exec)
+Exec(json_path)
+
+# כמות הגליפים שנוצרו
 glyph_count = 0
-svg_files = ListDirectory(input_path)
 
+# מעבר על קבצי SVG בתיקייה
+svg_files = ListDirectory(input_path)
 foreach(filename, svg_files)
     if (StrRight(filename, 4) != ".svg")
         continue
@@ -63,3 +66,4 @@ else
 endif
 
 Quit()
+
