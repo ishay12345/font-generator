@@ -22,6 +22,7 @@ def generate_ttf(svg_folder, output_path):
         svg_folder, output_path, json_path
     ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
+    # 🧾 זה החלק שחייב להיות:
     print("📤 FontForge output:")
     print(process.stdout)
 
