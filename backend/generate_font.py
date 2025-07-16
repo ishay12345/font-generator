@@ -32,12 +32,11 @@ def generate_ttf(svg_folder, output_path):
             text=True,
             check=True
         )
-
         print("✅ FontForge STDOUT:\n", result.stdout)
         print("📛 FontForge STDERR:\n", result.stderr)
 
     except subprocess.CalledProcessError as e:
         print("❌ FontForge failed!")
         print("🔧 STDOUT:\n", e.stdout)
-        print("🚨 STDERR:\n", e.stderr)
+        print("🚨 STDERR:\n", e.stderr)  # ←←← זה השלב שיראה מה הבעיה!
         raise RuntimeError(f"FontForge failed with return code {e.returncode}")
