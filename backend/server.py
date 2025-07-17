@@ -53,11 +53,11 @@ def upload_file():
 
             # שלב ב': המרה לשחור-לבן
             from bw_converter import convert_to_bw
-            convert_all_to_bw(input_folder='split_letters_output', output_folder='bw_letters')
+            convert_to_bw(input_folder='split_letters_output', output_folder='bw_letters')
 
             # שלב ג': המרה ל-SVG
             from svg_converter import convert_to_svg
-            convert_all_to_svg(input_folder='bw_letters', output_folder='svg_letters')
+            convert_to_svg(input_folder='bw_letters', output_folder='svg_letters')
 
             # שלב ד': יצירת הפונט
             from generate_font import generate_font_from_svgs
