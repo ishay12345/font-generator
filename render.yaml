@@ -2,5 +2,5 @@ services:
   - type: web
     name: font-generator
     env: python
-    buildCommand: pip install flask flask-cors opencv-python numpy
-    startCommand: python backend/server.py
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 backend/server.py
