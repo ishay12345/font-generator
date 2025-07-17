@@ -58,20 +58,20 @@
         method: 'POST',
         body: formData
       })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Server Error");
+        return res.json();
+      })
       .then(data => {
-        if (data.message) {
-          status.innerText = data.message;
-          downloadBtn.style.display = 'inline-block';
-        } else {
-          status.innerText = '⚠ קרתה שגיאה';
-        }
+        status.innerText = data.message;
+        downloadBtn.style.display = 'inline-block';
       })
       .catch(err => {
-        status.innerText = '⚠ שגיאה בשליחה';
+        status.innerText = '⚠ שגיאה בהעלאה או ביצירת פונט';
         console.error(err);
       });
     });
   </script>
 </body>
 </html>
+
