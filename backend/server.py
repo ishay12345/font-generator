@@ -53,15 +53,15 @@ def upload_file():
 
             # שלב ב': המרה לשחור-לבן
             from bw_converter import convert_to_bw
-            convert_to_bw(input_folder='split_letters_output', output_folder='bw_letters')
+            convert_to_bw(input_dir='split_letters_output', output_dir='bw_letters')
 
             # שלב ג': המרה ל-SVG
             from svg_converter import convert_to_svg
-            convert_to_svg(input_folder='bw_letters', output_folder='svg_letters')
+            convert_to_svg(input_dir='bw_letters', output_dir='svg_letters')
 
             # שלב ד': יצירת הפונט
             from generate_font import generate_font_from_svgs
-            generate_font_from_svgs(input_folder='svg_letters', output_path='fonts/output.ttf')
+            generate_font_from_svgs(input_dir='svg_letters', output_path='fonts/output.ttf')
 
             return 'File uploaded and font generated successfully', 200
     except Exception as e:
