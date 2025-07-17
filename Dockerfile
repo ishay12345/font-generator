@@ -1,28 +1,30 @@
-# בחר בסיס עם פייתון 3.10
+# Use Python 3.10 image
 FROM python:3.10-slim
 
-# התקן כלים בסיסיים
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    potrace \
-    libglib2.0-0 \
-    libsm6 \
-    libxrender1 \
-    libxext6 \
-    && apt-get clean
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# הגדר תיקיית עבודה
+# Set working directory
 WORKDIR /app
 
-# העתק את כל קבצי הפרויקט
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    potrace \
+    && apt-get clean
+
+# Copy dependency list
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Copy the app files
 COPY . .
 
-# התקן את התלויות
-RUN pip install --upgrade pip
-RUN pip install flask flask-cors opencv-python numpy Pillow ufoLib2 fonttools cu2qu defcon ufo2ft
+# Expose port
+EXPOSE 5000
 
-# הגדר את הפורט
-EXPOSE 10000
-
-# הפעל את השרת
+# Run the server
 CMD ["python", "backend/server.py"]
