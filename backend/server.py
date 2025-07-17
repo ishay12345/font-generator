@@ -4,58 +4,102 @@ import os
 from werkzeug.utils import secure_filename
 import subprocess
 
-# נתיבים
-UPLOAD_FOLDER = 'backend/uploads'
-SPLIT_OUTPUT_FOLDER = 'backend/split_letters_output'
-BW_FOLDER = 'backend/bw_letters'
-SVG_FOLDER = 'backend/svg_letters'
-EXPORT_FONT_FOLDER = 'exports'  # תוקן כאן
+# הבסיס – תיקיית הקובץ הנוכחי (backend/)
+BASE = os.path.dirname(os.path.abspath(__file__))
 
-# הגדרות Flask
-app = Flask(__name__, template_folder='../frontend/templates')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-CORS(app)
+# תיקיות עבודה מוחלטות
+UPLOAD_FOLDER       = os.path.join(BASE, 'uploads')
+SPLIT_OUTPUT_FOLDER = os.path.join(BASE, 'split_letters_output')
+BW_FOLDER           = os.path.join(BASE, 'bw_letters')
+SVG_FOLDER          = os.path.join(BASE, 'svg_letters')
+EXPORT_FONT_FOLDER  = os.path.join(BASE, '..', 'exports')  # exports/ בגיט ראשי
 
-# ודא שכל התיקיות קיימות
+# ודא כל התיקיות קיימות
 for folder in [UPLOAD_FOLDER, SPLIT_OUTPUT_FOLDER, BW_FOLDER, SVG_FOLDER, EXPORT_FONT_FOLDER]:
     os.makedirs(folder, exist_ok=True)
 
-@app.route('/')
+# אתחול Flask – templates בתיקיית frontend/templates
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE, '..', 'frontend', 'templates'),
+    static_folder=os.path.join(BASE, '..', 'frontend', 'static'),
+)
+CORS(app)
+
+
+@app.route('/', methods=['GET'])
 def home():
     return render_template('index.html')
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+        return jsonify(error='No file part'), 400
 
     file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+    if not file or file.filename == '':
+        return jsonify(error='No selected file'), 400
 
+    # שמירת הקובץ
     filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
-    # שלב 1: פיצול אותיות
-    subprocess.run(['python3', 'backend/split_letters.py', filepath])
+    # נקיון תיקיות לפני ריצה
+    for folder in [SPLIT_OUTPUT_FOLDER, BW_FOLDER, SVG_FOLDER]:
+        subprocess.run(['rm', '-rf', folder], cwd=BASE)
+        os.makedirs(folder, exist_ok=True)
 
-    # שלב 2: המרה לשחור-לבן
-    subprocess.run(['python3', 'backend/bw_converter.py'])
+    # 1. פיצול אותיות
+    proc = subprocess.run(
+        ['python3', os.path.join(BASE, 'split_letters.py'), filepath],
+        capture_output=True, text=True
+    )
+    if proc.returncode != 0:
+        app.logger.error(proc.stderr)
+        return jsonify(error='Error in split_letters'), 500
 
-    # שלב 3: המרה ל־SVG
-    subprocess.run(['python3', 'backend/svg_converter.py'])
+    # 2. המרה לשחור-לבן
+    proc = subprocess.run(
+        ['python3', os.path.join(BASE, 'bw_converter.py'), SPLIT_OUTPUT_FOLDER, BW_FOLDER],
+        capture_output=True, text=True
+    )
+    if proc.returncode != 0:
+        app.logger.error(proc.stderr)
+        return jsonify(error='Error in bw_converter'), 500
 
-    # שלב 4: יצירת פונט
-    subprocess.run(['python3', 'backend/generate_font.py'])
+    # 3. המרה ל‑SVG
+    proc = subprocess.run(
+        ['python3', os.path.join(BASE, 'svg_converter.py'), BW_FOLDER, SVG_FOLDER],
+        capture_output=True, text=True
+    )
+    if proc.returncode != 0:
+        app.logger.error(proc.stderr)
+        return jsonify(error='Error in svg_converter'), 500
 
-    font_path = os.path.join(EXPORT_FONT_FOLDER, 'handwriting_font.ttf')
+    # 4. יצירת הפונט דרך fontTools (generate_font.py)
+    font_output = os.path.join(EXPORT_FONT_FOLDER, 'my_font.ttf')
+    proc = subprocess.run(
+        ['python3', os.path.join(BASE, 'generate_font.py'), SVG_FOLDER, font_output],
+        capture_output=True, text=True
+    )
+    if proc.returncode != 0:
+        app.logger.error(proc.stderr)
+        return jsonify(error='Error in generate_font'), 500
 
-    if os.path.exists(font_path):
-        return send_file(font_path, as_attachment=True)
+    if os.path.exists(font_output):
+        return send_file(font_output, as_attachment=True)
     else:
-        return jsonify({'error': 'Font generation failed'}), 500
+        return jsonify(error='Font not found'), 500
+
+
+@app.route('/download/<path:filename>', methods=['GET'])
+def download_font(filename):
+    return send_file(os.path.join(EXPORT_FONT_FOLDER, filename), as_attachment=True)
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
 
