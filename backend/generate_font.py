@@ -1,8 +1,11 @@
 import os
 from defcon import Font
 from ufo2ft import compileTTF
+from fontTools.svgLib.path import parse_path
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from xml.dom import minidom
 
-# מיפוי שם האות לעקוד יוניקוד
+# מיפוי שמות האותיות לעברית
 letter_map = {
     "alef": 0x05D0, "bet": 0x05D1, "gimel": 0x05D2, "dalet": 0x05D3,
     "he": 0x05D4, "vav": 0x05D5, "zayin": 0x05D6, "het": 0x05D7,
@@ -13,7 +16,6 @@ letter_map = {
     "final_kaf": 0x05DA, "final_mem": 0x05DD, "final_nun": 0x05DF,
     "final_pe": 0x05E3, "final_tsadi": 0x05E5
 }
-
 
 def generate_ttf(svg_folder, output_path):
     print("🚀 Generating font with defcon + ufo2ft")
@@ -27,40 +29,40 @@ def generate_ttf(svg_folder, output_path):
     font.info.ascender = 800
     font.info.descender = -200
 
-    glyph_count = 0
-
-    for filename in sorted(os.listdir(svg_folder)):
+    for filename in os.listdir(svg_folder):
         if not filename.endswith(".svg"):
             continue
 
-        name = os.path.splitext(filename)[0]
-        if "_" not in name:
-            continue
-
-        # דוגמה לשם: 01_alef → alef
-        parts = name.split("_")
+        parts = filename.split("_")
         if len(parts) != 2:
             continue
 
-        letter_name = parts[1]
-        unicode_val = letter_map.get(letter_name)
-        if unicode_val is None:
+        name = parts[1].replace(".svg", "")
+        if name not in letter_map:
             continue
 
-        glyph = font.newGlyph(letter_name)
-        glyph.unicodes = [unicode_val]
+        unicode_val = letter_map[name]
+        glyph = font.newGlyph(name)
+        glyph.unicode = unicode_val
         glyph.width = 600
 
-        # טען את קובץ ה-SVG
-        glyph.importOutlines(os.path.join(svg_folder, filename))
-        glyph_count += 1
+        svg_path = os.path.join(svg_folder, filename)
+        doc = minidom.parse(svg_path)
+        paths = doc.getElementsByTagName('path')
+        if not paths:
+            print(f"⚠ לא נמצא path בתוך {filename}")
+            continue
 
-    if glyph_count == 0:
-        raise ValueError("❌ No valid glyphs were loaded.")
+        d = paths[0].getAttribute('d')
+        doc.unlink()
 
-    # יצירת TTF
+        pen = TTGlyphPen(None)
+        try:
+            path = parse_path(d, pen)  # ✅ התיקון המרכזי
+            glyph._glyph = pen.glyph()
+        except Exception as e:
+            print(f"⚠ שגיאה ב־{filename}:", e)
+
     ttf = compileTTF(font)
-    with open(output_path, "wb") as f:
-        ttf.save(f)
-
-    print(f"✅ Font created successfully: {output_path}")
+    ttf.save(output_path)
+    print("✅ Font saved at:", output_path)
