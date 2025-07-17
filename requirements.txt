@@ -3,3 +3,8 @@ flask-cors
 opencv-python
 numpy
 Pillow
+ufoLib2
+fonttools
+cu2qu
+defcon
+ufo2ft
