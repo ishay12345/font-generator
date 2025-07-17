@@ -2,13 +2,9 @@ services:
   - type: web
     name: font-generator-backend
     env: python
-    plan: free
-    buildCommand: |
-      apt-get update && apt-get install -y potrace
-      pip install --upgrade pip
-       pip install flask flask-cors opencv-python numpy Pillow ufoLib2 fonttools cu2qu defcon ufo2ft
-    startCommand: python3 backend/server.py
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10
-    autoDeploy: true
+    buildCommand: pip install -r requirements.txt && apt-get update && apt-get install -y potrace
+    startCommand: python backend/server.py
+    buildFilter:
+      paths:
+        - backend/**
+        - requirements.txt
