@@ -1,33 +1,28 @@
-# בסיס: פייתון 3.10 רזה
+# בחר בסיס עם פייתון 3.10
 FROM python:3.10-slim
 
-# ודא שכל פלט של פייתון יוצא מיידית
-ENV PYTHONUNBUFFERED=1
+# התקן כלים בסיסיים
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    potrace \
+    libglib2.0-0 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
+    && apt-get clean
 
-# התקנות מערכת: FontForge, Potrace, ועוד תלויות
-RUN apt-get update && \
-    apt-get install -y \
-        fontforge \
-        potrace \
-        libgl1 \
-        python3-dev \
-        build-essential && \
-    apt-get clean
-
-# יצירת הפניות של STDOUT ו־STDERR עבור לוגים
-RUN ln -sf /dev/stdout /var/log/fontforge.out && \
-    ln -sf /dev/stderr /var/log/fontforge.err
-
-# התקנת ספריות פייתון מתוך requirements.txt
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# העתקת כל קבצי הפרויקט
-COPY . /app
+# הגדר תיקיית עבודה
 WORKDIR /app
 
-# פתיחת הפורט ש-Flask משתמש בו
+# העתק את כל קבצי הפרויקט
+COPY . .
+
+# התקן את התלויות
+RUN pip install --upgrade pip
+RUN pip install flask flask-cors opencv-python numpy Pillow ufoLib2 fonttools cu2qu defcon ufo2ft
+
+# הגדר את הפורט
 EXPOSE 10000
 
-# פקודת הריצה של השרת
+# הפעל את השרת
 CMD ["python", "backend/server.py"]
