@@ -34,8 +34,41 @@ def home():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
-        return jsonify(error='No file part'), 400
+    try:
+        if 'file' not in request.files:
+            return 'No file part', 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return 'No selected file', 400
+
+        if file:
+            filename = secure_filename(file.filename)
+            file_path = os.path.join('uploads', filename)
+            file.save(file_path)
+
+            # שלב א': פילוח האותיות
+            from split_letters import split_letters
+            split_letters(file_path, output_folder='split_letters_output')
+
+            # שלב ב': המרה לשחור-לבן
+            from bw_converter import convert_all_to_bw
+            convert_all_to_bw(input_folder='split_letters_output', output_folder='bw_letters')
+
+            # שלב ג': המרה ל-SVG
+            from svg_converter import convert_all_to_svg
+            convert_all_to_svg(input_folder='bw_letters', output_folder='svg_letters')
+
+            # שלב ד': יצירת הפונט
+            from generate_font import generate_font_from_svgs
+            generate_font_from_svgs(input_folder='svg_letters', output_path='fonts/output.ttf')
+
+            return 'File uploaded and font generated successfully', 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # ידפיס את כל השגיאה לשרת
+        return f'Internal Server Error: {str(e)}', 500
+
 
     file = request.files['file']
     if not file or file.filename == '':
