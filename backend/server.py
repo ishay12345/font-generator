@@ -1,63 +1,55 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_file
 import os
-from split_letters import split_letters
-from bw_converter import convert_to_bw
-from svg_converter import convert_to_svg
-from generate_font import generate_ttf
+from werkzeug.utils import secure_filename
+import subprocess
 
-# הגדרת אפליקציה עם תיקיית סטטיים
-app = Flask(__name__, static_folder='../frontend')
-BASE = os.path.dirname(__file__)
+# נתיבים
+UPLOAD_FOLDER = 'backend/uploads'
+SPLIT_OUTPUT_FOLDER = 'backend/split_letters_output'
+BW_FOLDER = 'backend/bw_letters'
+SVG_FOLDER = 'backend/svg_letters'
+EXPORT_FONT_FOLDER = 'exports/fonts'
 
-# נתיבי תיקיות
-UPLOAD = os.path.join(BASE, 'uploads')
-SPLIT  = os.path.join(BASE, 'split_letters_output')
-BW     = os.path.join(BASE, 'bw_letters')
-SVG    = os.path.join(BASE, 'svg_letters')
-EXPORT = os.path.join(BASE, 'exports')
+# הגדרות Flask
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# יצירת כל התיקיות אם לא קיימות
-for d in [UPLOAD, SPLIT, BW, SVG, EXPORT]:
-    os.makedirs(d, exist_ok=True)
+# ודא שכל התיקיות קיימות
+for folder in [UPLOAD_FOLDER, SPLIT_OUTPUT_FOLDER, BW_FOLDER, SVG_FOLDER, EXPORT_FONT_FOLDER]:
+    os.makedirs(folder, exist_ok=True)
 
-# מסך הבית - מחזיר את index.html
-@app.route('/')
-def index():
-    return send_from_directory(app.static_folder, 'index.html')
-
-# אם מנסים לגשת לקבצים סטטיים כמו style.css
-@app.route('/<path:filename>')
-def serve_static(filename):
-    return send_from_directory(app.static_folder, filename)
-
-# API - העלאת קובץ
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    file = request.files.get('file')
-    if not file or file.filename == '':
-        return jsonify({'error':'קובץ לא הועלה'}),400
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
 
-    img_path = os.path.join(UPLOAD, file.filename)
-    file.save(img_path)
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
 
-    try:
-        split_letters(img_path, SPLIT)
-        convert_to_bw(SPLIT, BW)
-        convert_to_svg(BW, SVG)
-        ttf = os.path.join(EXPORT, 'my_font.ttf')
-        generate_ttf(SVG, ttf)
-        return jsonify({'download':'/download-font'}),200
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(filepath)
 
-    except Exception as e:
-        print("Error pipeline:", e)
-        return jsonify({'error':'⚠ שגיאה ביצירת הפונט'}),500
+    # שלב 1: פיצול אותיות
+    subprocess.run(['python', 'backend/split_letters.py', filepath])
 
-# API - הורדת הפונט
-@app.route('/download-font')
-def download_font():
-    return send_from_directory(EXPORT, 'my_font.ttf', as_attachment=True)
+    # שלב 2: המרה לשחור-לבן
+    subprocess.run(['python', 'backend/bw_converter.py'])
 
-# הרצת השרת
+    # שלב 3: המרה ל־SVG
+    subprocess.run(['python', 'backend/svg_converter.py'])
+
+    # שלב 4: יצירת פונט
+    subprocess.run(['python', 'backend/generate_font.py'])
+
+    font_path = os.path.join(EXPORT_FONT_FOLDER, 'handwriting_font.ttf')
+
+    if os.path.exists(font_path):
+        return send_file(font_path, as_attachment=True)
+    else:
+        return jsonify({'error': 'Font generation failed'}), 500
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True)
 
