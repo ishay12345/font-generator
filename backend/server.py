@@ -52,11 +52,11 @@ def upload_file():
             split_letters(file_path, output_folder='split_letters_output')
 
             # שלב ב': המרה לשחור-לבן
-            from bw_converter import convert_all_to_bw
+            from bw_converter import convert_to_bw
             convert_all_to_bw(input_folder='split_letters_output', output_folder='bw_letters')
 
             # שלב ג': המרה ל-SVG
-            from svg_converter import convert_all_to_svg
+            from svg_converter import convert_to_svg
             convert_all_to_svg(input_folder='bw_letters', output_folder='svg_letters')
 
             # שלב ד': יצירת הפונט
