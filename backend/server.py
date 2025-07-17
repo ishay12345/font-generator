@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file, render_template
 from flask_cors import CORS
 import os
+import shutil
 from werkzeug.utils import secure_filename
 import subprocess
 
@@ -14,8 +15,10 @@ BW_FOLDER           = os.path.join(BASE, 'bw_letters')
 SVG_FOLDER          = os.path.join(BASE, 'svg_letters')
 EXPORT_FONT_FOLDER  = os.path.join(BASE, '..', 'exports')  # exports/ בגיט ראשי
 
-# ודא כל התיקיות קיימות
+# מחיקת תוכן תיקיות קיימות (דריסה)
 for folder in [UPLOAD_FOLDER, SPLIT_OUTPUT_FOLDER, BW_FOLDER, SVG_FOLDER, EXPORT_FONT_FOLDER]:
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
     os.makedirs(folder, exist_ok=True)
 
 # אתחול Flask – templates בתיקיית frontend/templates
